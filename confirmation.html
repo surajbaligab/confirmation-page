@@ -1,28 +1,45 @@
-<script>
-  function getLocation() {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(sendLocation);
-    } else {
-      alert("Geolocation is not supported by this browser.");
-    }
-  }
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Confirmation</title>
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAyiQsONhgIlsACu5Q7Z3I7O_C3Md9QTEQ"></script>
+    <script>
+        function initMap() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition((position) => {
+                    const lat = position.coords.latitude;
+                    const lng = position.coords.longitude;
 
-  function sendLocation(position) {
-    const urlParams = new URLSearchParams(window.location.search);
-    const scriptUrl = urlParams.get('scriptUrl');
-    const latitude = position.coords.latitude;
-    const longitude = position.coords.longitude;
+                    // Replace with your Google Sheet ID
+                    const sheetId = '19p-kIdlPB7iXmMgiyVxPxv2CfJCAGDSgRF9keN1r4oM';
+                    const range = 'Sheet1!A1'; // Replace Sheet1!A1 with the appropriate cell reference
+                    const url = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${range}?key=AIzaSyAyiQsONhgIlsACu5Q7Z3I7O_C3Md9QTEQ`;
+                    const data = {
+                        range: range,
+                        majorDimension: 'ROWS',
+                        values: [
+                            [lat, lng]
+                        ],
+                    };
 
-    fetch(`${scriptUrl}?latitude=${latitude}&longitude=${longitude}`)
-      .then(response => {
-        if (!response.ok) {
-          throw new Error('Network response was not ok');
+                    fetch(url, {
+                        method: 'PUT',
+                        body: JSON.stringify(data),
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                    });
+                });
+            } else {
+                alert('Geolocation is not supported by this browser.');
+            }
         }
-      })
-      .catch(error => {
-        console.error('There was a problem with the fetch operation:', error);
-      });
-  }
-
-  getLocation();
-</script>
+    </script>
+</head>
+<body onload="initMap()">
+    <h1>Thank you for submitting the form!</h1>
+    <p>Your location has been recorded.</p>
+</body>
+</html>
