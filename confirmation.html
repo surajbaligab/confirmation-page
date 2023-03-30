@@ -1,27 +1,50 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<!DOCTYPE html>
 <html>
-<head>
-  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-  <meta http-equiv="Content-Style-Type" content="text/css">
-  <title></title>
-  <meta name="Generator" content="Cocoa HTML Writer">
-  <meta name="CocoaVersion" content="1894.3">
-  <style type="text/css">
-    p.p1 {margin: 0.0px 0.0px 0.0px 0.0px; font: 12.0px Helvetica}
-  </style>
-</head>
-<body>
-<p class="p1">&lt;!DOCTYPE html&gt;</p>
-<p class="p1">&lt;html lang="en"&gt;</p>
-<p class="p1">&lt;head&gt;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>&lt;meta charset="UTF-8"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>&lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>&lt;title&gt;Confirmation Page&lt;/title&gt;</p>
-<p class="p1">&lt;/head&gt;</p>
-<p class="p1">&lt;body&gt;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>&lt;h1&gt;Thank you for submitting the form!&lt;/h1&gt;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>&lt;p&gt;Your response has been successfully recorded.&lt;/p&gt;</p>
-<p class="p1">&lt;/body&gt;</p>
-<p class="p1">&lt;/html&gt;</p>
-</body>
+  <head>
+    <script src="https://apis.google.com/js/api.js"></script>
+    <script>
+      function handleClientLoad() {
+        gapi.load('client', initClient);
+      }
+
+      function initClient() {
+        gapi.client.init({
+          apiKey: 'YOUR_API_KEY', // Replace with your API key
+          discoveryDocs: ['https://sheets.googleapis.com/$discovery/rest?version=v4'],
+        }).then(() => {
+          navigator.geolocation.getCurrentPosition((position) => {
+            const latitude = position.coords.latitude;
+            const longitude = position.coords.longitude;
+            saveLocation(latitude, longitude);
+          });
+        });
+      }
+
+      function saveLocation(latitude, longitude) {
+        const params = {
+          spreadsheetId: 'YOUR_SPREADSHEET_ID', // Replace with your Google Sheet ID
+          range: 'Form Responses 1', // Replace with the name of the sheet that collects form responses
+          valueInputOption: 'RAW',
+          insertDataOption: 'INSERT_ROWS',
+        };
+
+        const valueRangeBody = {
+          'majorDimension': 'ROWS',
+          'values': [
+            ['', '', '', '', '', '', '', '', '', '', '', '', latitude, longitude]
+          ]
+        };
+
+        gapi.client.sheets.spreadsheets.values.append(params, valueRangeBody).then((response) => {
+          console.log('Saved geolocation:', response.result);
+        }, (reason) => {
+          console.error('Error saving geolocation:', reason.result.error.message);
+        });
+      }
+    </script>
+  </head>
+  <body onload="handleClientLoad()">
+    <h1>Thank you for submitting the form!</h1>
+    <p>Your response has been recorded successfully.</p>
+  </body>
 </html>
