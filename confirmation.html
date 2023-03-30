@@ -1,35 +1,58 @@
 <!DOCTYPE html>
 <html>
-<head>
-    <title>Confirmation</title>
-    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAyiQsONhgIlsACu5Q7Z3I7O_C3Md9QTEQ"></script>
-    <script>
-        function initMap(lat, lng) {
-            var location = { lat: lat, lng: lng };
-            var map = new google.maps.Map(document.getElementById('map'), {
-                zoom: 16,
-                center: location
-            });
-            var marker = new google.maps.Marker({
-                position: location,
-                map: map
-            });
-        }
-
-        navigator.geolocation.getCurrentPosition(function (position) {
-            initMap(position.coords.latitude, position.coords.longitude);
-        });
-    </script>
+  <head>
+    <base target="_top">
     <style>
-        #map {
-            height: 400px;
-            width: 100%;
-        }
+      body, html {
+        margin: 0;
+        padding: 0;
+        height: 100%;
+        width: 100%;
+      }
+      #form-container {
+        width: 100%;
+        position: absolute;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        overflow: auto;
+        -webkit-overflow-scrolling: touch;
+      }
+      iframe {
+        width: 100%;
+        border: none;
+      }
     </style>
-</head>
-<body>
-    <h1>Thank you for your submission!</h1>
-    <p>Your location has been recorded.</p>
-    <div id="map"></div>
-</body>
+  </head>
+  <body>
+    <div id="form-container">
+      <iframe id="form-iframe" src="<?= formUrl ?>"></iframe>
+    </div>
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAyiQsONhgIlsACu5Q7Z3I7O_C3Md9QTEQ"
+            async defer></script>
+    <script>
+      const formIframe = document.getElementById('form-iframe');
+      formIframe.addEventListener('load', () => {
+        formIframe.style.height = formIframe.contentWindow.document.body.scrollHeight + 'px';
+
+        formIframe.contentWindow.addEventListener('message', (event) => {
+          if (event.data === 'submit') {
+            navigator.geolocation.getCurrentPosition((position) => {
+              const geocoder = new google.maps.Geocoder();
+              const latLng = new google.maps.LatLng(position.coords.latitude, position.coords.longitude);
+              geocoder.geocode({ 'latLng': latLng }, (results, status) => {
+                if (status === google.maps.GeocoderStatus.OK) {
+                  const formattedAddress = results[0].formatted_address;
+                  google.script.run.appendResponse(position.coords.latitude, position.coords.longitude, formattedAddress);
+                  window.location.href = '<?= confirmationPageUrl ?>';
+                } else {
+                  console.log('Geocoder failed due to: ' + status);
+                }
+              });
+            });
+          }
+        });
+      });
+    </script>
+  </body>
 </html>
