@@ -1,50 +1,28 @@
-<!DOCTYPE html>
-<html>
-  <head>
-    <script src="https://apis.google.com/js/api.js"></script>
-    <script>
-      function handleClientLoad() {
-        gapi.load('client', initClient);
-      }
+<script>
+  function getLocation() {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(sendLocation);
+    } else {
+      alert("Geolocation is not supported by this browser.");
+    }
+  }
 
-      function initClient() {
-        gapi.client.init({
-          apiKey: 'AIzaSyDiOo34Qj2RfIDz55vEuGKbsJ9xJzpwZlo', // Replace with your API key
-          discoveryDocs: ['https://sheets.googleapis.com/$discovery/rest?version=v4'],
-        }).then(() => {
-          navigator.geolocation.getCurrentPosition((position) => {
-            const latitude = position.coords.latitude;
-            const longitude = position.coords.longitude;
-            saveLocation(latitude, longitude);
-          });
-        });
-      }
+  function sendLocation(position) {
+    const urlParams = new URLSearchParams(window.location.search);
+    const scriptUrl = urlParams.get('scriptUrl');
+    const latitude = position.coords.latitude;
+    const longitude = position.coords.longitude;
 
-      function saveLocation(latitude, longitude) {
-        const params = {
-          spreadsheetId: '19p-kIdlPB7iXmMgiyVxPxv2CfJCAGDSgRF9keN1r4oM', // Replace with your Google Sheet ID
-          range: 'Form Responses 1', // Replace with the name of the sheet that collects form responses
-          valueInputOption: 'RAW',
-          insertDataOption: 'INSERT_ROWS',
-        };
+    fetch(`${scriptUrl}?latitude=${latitude}&longitude=${longitude}`)
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Network response was not ok');
+        }
+      })
+      .catch(error => {
+        console.error('There was a problem with the fetch operation:', error);
+      });
+  }
 
-        const valueRangeBody = {
-          'majorDimension': 'ROWS',
-          'values': [
-            ['', '', '', '', '', '', '', '', '', '', '', '', latitude, longitude]
-          ]
-        };
-
-        gapi.client.sheets.spreadsheets.values.append(params, valueRangeBody).then((response) => {
-          console.log('Saved geolocation:', response.result);
-        }, (reason) => {
-          console.error('Error saving geolocation:', reason.result.error.message);
-        });
-      }
-    </script>
-  </head>
-  <body onload="handleClientLoad()">
-    <h1>Thank you for submitting the form!</h1>
-    <p>Your response has been recorded successfully.</p>
-  </body>
-</html>
+  getLocation();
+</script>
